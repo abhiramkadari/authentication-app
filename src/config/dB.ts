@@ -16,13 +16,17 @@ const handle = (promise:any) => {
 
 const init = async () => {
     console.log('connecting to DB')
-    let [connection, connectionErr] = await handle(mongoDbCLient.connect(`${DATABASE_URL}`));
+
+    //calling promise method for connecting to mongo by destructuring
+
+    let [connection, connectionErr] = await handle( mongoDbCLient.connect(`${DATABASE_URL}`) );
     if(connectionErr){
         console.log(`Could not connect to MONGODB`);
     } else{
         connectionObj = connection;
         console.log(`MONGODB Client Connected`);
     }
+    
 };
 
 export { init, connectionObj  };

@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
+import { loginUser, signUpUser } from './authController';
 
 export default [
     {
@@ -7,7 +8,7 @@ export default [
         handler: [
           async (req: Request, res: Response, next:NextFunction) => {
             try{
-              const result =  'signnnnnnn up'
+              const result:any =  await signUpUser('asianLabs',req.body)
               res.status(200).send(result);
             }catch(e){
               next(e); 
@@ -22,7 +23,8 @@ export default [
         handler: [
           async (req: Request, res: Response, next:NextFunction) => {
             try{
-              const result =  'LOGIN'
+              const result =  await loginUser('asianLabs',req.body)
+              console.log('result',result)
               res.status(200).send(result);
             }catch(e){
               next(e); 
@@ -32,3 +34,4 @@ export default [
         ],
     },
 ]
+
