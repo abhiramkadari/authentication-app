@@ -23,8 +23,11 @@
     "@types/bcrypt": "^5.0.2",
     "@types/cors": "^2.8.17",
     "@types/express": "^4.17.21",
+    "@types/imap-simple": "^4.2.9",
+    "@types/jira-client": "^7.1.9",
     "@types/jsonwebtoken": "^9.0.6",
     "@types/node": "^20.14.9",
+    "@types/node-imap": "^0.9.3",
     "typescript": "^5.5.3"
   },
   "dependencies": {
@@ -32,8 +35,11 @@
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
+    "imap-simple": "^5.1.0",
+    "jira-client": "^8.2.2",
     "jsonwebtoken": "^9.0.2",
     "mongodb": "^6.8.0",
+    "node-imap": "^0.9.6",
     "tsc-watch": "^6.2.0"
   }
 }

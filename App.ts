@@ -3,7 +3,7 @@ import express from 'express';
 
 import { applyRoutes } from './src/utils';
 import { applyMiddleware } from './src/utils';
-import routes from './src/services/authRoutes';
+import routes from './src/services/index';
 
 import { initDependencies } from './src/config/index';
 
