@@ -27,7 +27,9 @@
     "@types/jira-client": "^7.1.9",
     "@types/jsonwebtoken": "^9.0.6",
     "@types/node": "^20.14.9",
+    "@types/node-fetch": "^2.6.11",
     "@types/node-imap": "^0.9.3",
+    "tsc-watch": "^6.2.0",
     "typescript": "^5.5.3"
   },
   "dependencies": {
@@ -39,7 +41,7 @@
     "jira-client": "^8.2.2",
     "jsonwebtoken": "^9.0.2",
     "mongodb": "^6.8.0",
-    "node-imap": "^0.9.6",
-    "tsc-watch": "^6.2.0"
+    "node-fetch": "^2.7.0",
+    "node-imap": "^0.9.6"
   }
 }
