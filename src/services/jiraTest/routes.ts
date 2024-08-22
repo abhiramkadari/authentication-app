@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { testJira } from './jiraController';
+import { setupJira } from './jiraModel';
 
 export default [
     {
@@ -9,7 +10,7 @@ export default [
           async (req: Request, res: Response, next:NextFunction) => {
             try{
               const result:any =  await testJira()
-              res.status(200).send(result);
+              res.send(result);
             }catch(e){
               next(e); 
             }
@@ -17,4 +18,19 @@ export default [
           },
         ],
     },
+    {
+      path: '/setup',
+      method: 'post',
+      handler: [
+        async (req: Request, res: Response, next:NextFunction) => {
+          try{
+            const result:any =  await setupJira()
+            res.status(200).send(result);
+          }catch(e){
+            next(e); 
+          }
+        
+        },
+      ],
+  },
 ]

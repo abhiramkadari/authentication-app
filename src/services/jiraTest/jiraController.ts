@@ -1,3 +1,4 @@
+import axios from "axios";
 import { connectionObj } from "../../config/dB";
 import JiraClient from 'jira-client'
 import fetch from 'node-fetch';
@@ -12,6 +13,9 @@ const jira = new JiraClient({
     apiVersion: '2',                        // Jira API version
     strictSSL: true                         // Set to false if your Jira server uses a self-signed SSL certificate
 });
+
+const email = process.env.JIRA_USERNAME;
+const apiToken = process.env.JIRA_API_TOKEN;
 
 export const testJira = async()=>{
     console.log('Hello')
@@ -28,7 +32,7 @@ export const testJira = async()=>{
 
 
         // 3.for creating project
-        // createSimpleJiraProject('APITEST4', 'APITEST4')
+        // createSimpleJiraProject('TEST FOR SCREEN', 'HII')
         //     .then(project => {
         //         console.log('Project created successfully:', project);
         //     })
@@ -143,12 +147,51 @@ export const testJira = async()=>{
         // 19.4 get project workflow schemes and associate workflow scheme for project
         // const b = await associateWorlflowSchemeForProject()
 
+        // 20 add issurtype to a workflow scheme
+        // const isuueType = await setIssueTypeForworkflowscheme()
+
+
+        // 21 GET ALL STATUSES
+        // const a = await getAllStatusInJira()
+
+        // 22create statuses
+        // const a = await createBulkStatuses()
+
+        // 23 create issue with api
+        // const b = await createIssueWithAPi()
+        // return b
+
+
+        // 24 GET SCREENS
+        const b = await getScreens()
+
+        // 15 get priorities
+        // const c = getPrioritiesForIssue()
+        // console.log('getPrioritiesForIssue:', c);
         
 
       } catch (error) {
         console.error('Error connecting to Jira:', error);
       }
 
+}
+
+const getPrioritiesForIssue = async()=>{
+    fetch('https://mannelabs.atlassian.net/rest/api/3/priority', {
+        method: 'GET',
+        headers: {
+          'Authorization':`Basic ${Buffer.from(`${email}:${apiToken}`).toString('base64')}`,
+          'Accept': 'application/json'
+        }
+      })
+        .then(response => {
+          console.log(
+            `Response: ${response.status} ${response.statusText}`
+          );
+          return response.text();
+        })
+        .then(text => console.log(text))
+        .catch(err => console.error(err));
 }
 
 // Method to get the current user
@@ -277,7 +320,7 @@ const addNewTicket = async () => {
                 "project": {
                     "id": "10010"
                 },
-                "summary": "HELLO NEW TICKET NODEISSUETYPE2",
+                "summary": "BASIC AXIOS TYPE 222",
                 "description": {
                     "content": [
                         {
@@ -294,7 +337,7 @@ const addNewTicket = async () => {
                     "version": 1
                 },
                 "issuetype": {
-                    "name": "NODEISSUETYPE2"
+                    "name": "Story"
                 },
                 "assignee": {
                     "id": "${givenUser.accountId}"
@@ -308,23 +351,36 @@ const addNewTicket = async () => {
         const apiToken = process.env.JIRA_API_TOKEN;
 
         //create ticket in project using body data
-        fetch('https://mannelabs.atlassian.net/rest/api/3/issue', {
-            method: 'POST',
-            headers: {
-              'Authorization':`Basic ${Buffer.from(`${email}:${apiToken}`).toString('base64')}`,
-              'Accept': 'application/json',
-              'Content-Type': 'application/json'
-            },
-            body: bodyData
-          })
-            .then(response => {
-              console.log(
-                `Response: ${response.status} ${response.statusText}`
-              );
-              return response.text();
-            })
-            .then(text => console.log(text))
-            .catch(err => console.error(err));
+        // fetch('https://mannelabs.atlassian.net/rest/api/3/issue', {
+        //     method: 'POST',
+        //     headers: {
+        //       'Authorization':`Basic ${Buffer.from(`${email}:${apiToken}`).toString('base64')}`,
+        //       'Accept': 'application/json',
+        //       'Content-Type': 'application/json'
+        //     },
+        //     body: bodyData
+        //   })
+        //     .then(response => {
+        //       console.log(
+        //         `Response: ${response.status} ${response.statusText}`
+        //       );
+        //       return response.text();
+        //     })
+        //     .then(text => console.log(text))
+        //     .catch(err => console.error(err));
+        try {
+            const response = await axios.post('https://mannelabs.atlassian.net/rest/api/3/issue', bodyData, {
+                headers: {
+                    'Authorization': `Basic ${Buffer.from(`${email}:${apiToken}`).toString('base64')}`,
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                }
+            });
+            console.log(`Response: ${response.status} ${response.statusText}`);
+            console.log(response.data);
+        } catch (error:any) {
+            console.error('Error:', error.response ? error.response.data : error.message);
+        }
 
         
     } catch (error) {
@@ -545,13 +601,6 @@ const createNewIssueTypeInJira = async ()=>{
         },
         body: bodyData
       })
-    //   fetch(`https://mannelabs.atlassian.net/rest/api/3/issuetype/project?projectId=${10001}`, {
-    //     method: 'GET',
-    //     headers: {
-    //       'Authorization': `Basic ${Buffer.from(`${email}:${apiToken}`).toString('base64')}`,
-    //       'Accept': 'application/json'
-    //     }
-    //   })
       .then((response:any) => {
         console.log(
           `Response: ${response.status} ${response.statusText}`
@@ -575,7 +624,7 @@ export const assignIssueTypeSchemeToProject = async ()=>{
 
     let apiUrl3 = 'https://mannelabs.atlassian.net/rest/api/3/issuetypescheme' //get issue type schemes
 
-    let apiUrl4 = `https://mannelabs.atlassian.net/rest/api/3/issuetypescheme/project?projectId=${10010}` //get issue type schemes for project
+    let apiUrl4 = `https://mannelabs.atlassian.net/rest/api/3/issuetypescheme/project?projectId=${10011}` //get issue type schemes for project
 
     // let myResponse = fetch(apiUrl4, {
     // method: 'GET',
@@ -639,10 +688,10 @@ export const assignIssueTypeSchemeToProject = async ()=>{
 
 
 
-    // const bodyDataForAssigningScheme = `{
-    //     "issueTypeSchemeId": "10000",
-    //     "projectId": "10001"
-    //   }`;
+    const bodyDataForAssigningScheme = `{
+        "issueTypeSchemeId": "10000",
+        "projectId": "10001"
+      }`;
       
     //   fetch('https://mannelabs.atlassian.net/rest/api/3/issuetypescheme/project', {
     //     method: 'PUT',
@@ -741,108 +790,107 @@ const createNewWorkflow = async ()=>{
     //     console.error('Error getting issue:', error);
     // }
 
-
-    
-    //for getting all existing statuses with rest api
-
-    // fetch('https://mannelabs.atlassian.net/rest/api/3/status', {
-    //     method: 'GET',
-    //     headers: {
-    //       'Authorization': `Basic ${Buffer.from(`${email}:${apiToken}`).toString('base64')}`,
-    //       'Accept': 'application/json'
-    //     }
-    //   })
-    //     .then(response => {
-    //       console.log(
-    //         `Response ABhiram: ${response.status} ${response.statusText}`
-    //       );
-    //       return response.text();
-    //     })
-    //     .then(text => console.log(text))
-    //     .catch(err => console.error(err));
-
     
 
     //payload correct for creating a normal workflow
     const bodyData = `{
-    "description": "This is a workflow used for Stories and Tasks",
-    "name": "NODE SAMPLE WORKFLOW",
+    "description": "This is a workflow created while creating new statuses",
+    "name": "TESTING TRANISTIONs",
     "statuses": [
         {
-            "id": "1",
-            "properties": {
-                "jira.issue.editable": "false"
-            }
+            "id": "1"
         },
         {
-            "id": "10006"
+            "id": "10026"
         },
         {
-            "id": "3"
+            "id": "10027"
         },
         {
-            "id": "10007"
-        },
-        {
-            "id": "10008"
-        },
-        {
-            "id": "6"
+            "id": "10028"
         }
     ],
     "transitions": [
-        {
-            "from": [],
-            "name": "OpenDESC",
-            "to": "1",
-            "type": "initial"
-        },
+    {
+        "from": [],
+        "name": "OpenDESC",
+        "to": "1",
+        "type": "initial"
+    },
+    {
+        "from": ["1"],
+        "name": "STATUS1111",
+        "to": "10026",
+        "type": "directed"
+    },
+    {
+        "from": ["1"],
+        "name": "STATUS222",
+        "to": "10027",
+        "type": "directed"
+    },
+    {
+        "from": ["1"],
+        "name": "STATUS333",
+        "to": "10028",
+        "type": "directed"
+    },
+    {
+        "from": ["10026"],
+        "name": "STATUS222",
+        "to": "10027",
+        "type": "directed"
+    },
+    {
+        "from": ["10026"],
+        "name": "OpenDESC",
+        "to": "1",
+        "type": "directed"
+    },
+    {
+        "from": ["10026"],
+        "name": "STATUS333",
+        "to": "10028",
+        "type": "directed"
+    },
+    {
+        "from": ["10027"],
+        "name": "STATUS1111",
+        "to": "10026",
+        "type": "directed"
+    },
+    {
+        "from": ["10027"],
+        "name": "OpenDESC",
+        "to": "1",
+        "type": "directed"
+    },
+    {
+        "from": ["10027"],
+        "name": "STATUS333",
+        "to": "10028",
+        "type": "directed"
+    },
+    {
+        "from": ["10028"],
+        "name": "STATUS1111",
+        "to": "10026",
+        "type": "directed"
+    },
+    {
+        "from": ["10028"],
+        "name": "STATUS222",
+        "to": "10027",
+        "type": "directed"
+    },
+    {
+        "from": ["10028"],
+        "name": "OpenDESC",
+        "to": "1",
+        "type": "directed"
+    }
+]
 
-        {
-            "from": [
-                "1"
-            ],
-            "name": "For Approve",
-            "to": "10006",
-            "type": "directed"
-        },
-
-        {
-            "from": [
-                "10006"
-            ],
-            "name": "In progress DESC",
-            "to": "3",
-            "type": "directed"
-        },
-
-        {
-            "from": [
-                "3"
-            ],
-            "name": "For Deploy",
-            "to": "10007",
-            "type": "directed"
-        },
-
-         {
-            "from": [
-                "10007"
-            ],
-            "name": "For Testing",
-            "to": "10008",
-            "type": "directed"
-        },
-
-        {
-            "from": [
-                "10008"
-            ],
-            "name": "Closed DESC",
-            "to": "6",
-            "type": "directed"
-        }
-    ]
     }`;
       
     //for creating new worklow
@@ -914,16 +962,17 @@ const getWorkflowSchemesAndPerform = async ()=>{
 const createWorkflowScheme = async ()=>{
 
     //for getting all issue types
-    // try {
-    //     const issue = await  jira.listIssueTypes();
-    //     console.log('Issue Types:', issue);
-    //     return issue;
-    // } catch (error) {
-    //     console.error('Error getting issue:', error);
-    // }
+    try {
+        const issue = await  jira.listIssueTypes();
+        console.log('Issue Types:', issue);
+        return issue;
+    } catch (error) {
+        console.error('Error getting issue:', error);
+    }
 
 
     // payload is correct for creating workflwo scheme and below ids are issuetypeids
+    //define workflow by name
     const bodyData = `{
         "defaultWorkflow": "jira",
         "description": "The description of the example NODE SAMPLE WORKFLOW scheme.",
@@ -936,26 +985,26 @@ const createWorkflowScheme = async ()=>{
         "name": "NODE SAMPLE WORKFLOW SCHEME"
       }`;
 
-    const email = process.env.JIRA_USERNAME;
-    const apiToken = process.env.JIRA_API_TOKEN;
+    // const email = process.env.JIRA_USERNAME;
+    // const apiToken = process.env.JIRA_API_TOKEN;
 
-      let a = fetch('https://mannelabs.atlassian.net/rest/api/3/workflowscheme', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Basic ${Buffer.from(`${email}:${apiToken}`).toString('base64')}`,
-          'Accept': 'application/json',
-          'Content-Type': 'application/json'
-        },
-        body: bodyData
-      })
-        .then(response => {
-          console.log(
-            `Response: ${response.status} ${response.statusText}`
-          );
-          return response.text();
-        })
-        .then(text => console.log(text))
-        .catch(err => console.error(err));
+      // let a = fetch('https://mannelabs.atlassian.net/rest/api/3/workflowscheme', {
+      //   method: 'POST',
+      //   headers: {
+      //     'Authorization': `Basic ${Buffer.from(`${email}:${apiToken}`).toString('base64')}`,
+      //     'Accept': 'application/json',
+      //     'Content-Type': 'application/json'
+      //   },
+      //   body: bodyData
+      // })
+      //   .then(response => {
+      //     console.log(
+      //       `Response: ${response.status} ${response.statusText}`
+      //     );
+      //     return response.text();
+      //   })
+      //   .then(text => console.log(text))
+      //   .catch(err => console.error(err));
 }
 
 const associateWorlflowSchemeForProject = async ()=>{
@@ -1007,3 +1056,297 @@ const associateWorlflowSchemeForProject = async ()=>{
     //     .catch(err => console.error(err));
 
 }
+
+const setIssueTypeForworkflowscheme = async()=>{
+
+    const email = process.env.JIRA_USERNAME;
+    const apiToken = process.env.JIRA_API_TOKEN;
+
+    // try {
+    //     const issue = await  jira.listIssueTypes();
+    //     console.log('Issue Types:', issue);
+    // } catch (error) {
+    //     console.error('Error getting issue:', error);
+    // }
+
+
+    // let a = fetch(`https://mannelabs.atlassian.net/rest/api/3/workflowscheme/project?projectId=${10010}`, {
+    //     method: 'GET',
+    //     headers: {
+    //       'Authorization': `Basic ${Buffer.from(`${email}:${apiToken}`).toString('base64')}`,
+    //       'Accept': 'application/json'
+    //     }
+    //   })
+    //     .then(response => {
+    //       console.log(
+    //         `Response: ${response.status} ${response.statusText}`
+    //       );
+    //       return response.text();
+    //     })
+    //     .then(text => console.log(text))
+    //     .catch(err => console.error(err));
+
+
+    const bodyData = `{
+        "issueTypes": [
+          "10019",
+          "10001","10014","10004","10018"
+        ],
+        "updateDraftIfNeeded": true,
+        "workflow": "jira"
+      }`;
+      
+      fetch(`https://mannelabs.atlassian.net/rest/api/3/workflowscheme/${10014}/workflow?workflowName=${'NODE SAMPLE WORKFLOW'}`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Basic ${Buffer.from(`${email}:${apiToken}`).toString('base64')}`,
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        },
+        body: bodyData
+    })
+      .then(response => {
+        console.log(
+          `Response: ${response.status} ${response.statusText}`
+        );
+        return response.text();
+      })
+      .then(text => console.log(text))
+      .catch(err => console.error(err));
+}
+
+const getAllStatusInJira = async ()=>{
+    const email = process.env.JIRA_USERNAME;
+    const apiToken = process.env.JIRA_API_TOKEN;
+
+
+
+   //for getting all the statuses in the jiraaa
+   let a = await fetch(`https://mannelabs.atlassian.net/rest/api/3/statuses/search`, {
+    method: 'GET',
+    headers: {
+      'Authorization': `Basic ${Buffer.from(`${email}:${apiToken}`).toString('base64')}`,
+      'Accept': 'application/json',
+    }
+  })
+    .then(response => {
+      console.log(`Response STATUSES: ${response.status} ${response.statusText}`);
+      return response.json();
+    })
+    .then(data => console.log(data))
+    .catch(err => console.error(err));
+}
+
+const createBulkStatuses = async ()=>{
+    const email = process.env.JIRA_USERNAME;
+    const apiToken = process.env.JIRA_API_TOKEN;
+    // try {
+    //     let a = await jira.listProjects();
+    //     console.log('óiudhgh',a)
+    //     return a
+    // } catch (error) {
+    //     console.error('Error fetching projects:', error);
+    // }
+
+
+    //for creating statuses in bulk
+
+    const bodyData = `{
+        "scope": {
+            "type": "GLOBAL"
+        },
+        "statuses": [
+            {
+            "description": "Status 6 description",
+            "name": "STATUS6",
+            "statusCategory": "TODO"
+          },
+        
+          {
+            "description": "Status 7 description",
+            "name": "STATUS7",
+            "statusCategory": "TODO"
+          },
+          {
+            "description": "Status 8 description",
+            "name": "STATUS8",
+            "statusCategory": "DONE"
+          }
+        ]
+      }`;
+      
+    //  let b = await fetch('https://mannelabs.atlassian.net/rest/api/3/statuses', {
+    //     method: 'POST',
+    //     headers: {
+    //       'Authorization': `Basic ${Buffer.from(`${email}:${apiToken}`).toString('base64')}`,
+    //       'Accept': 'application/json',
+    //       'Content-Type': 'application/json'
+    //     },
+    //     body: bodyData
+    //   })
+    //     .then(response => {
+    //       console.log(
+    //         `Response: ${response.status} ${response.statusText}`
+    //       );
+    //       return response.text();
+    //     })
+    //     .then(text => console.log(text))
+    //     .catch(err => console.error(err));
+          
+      
+}
+
+const createIssueWithAPi = async ()=>{
+    const email = process.env.JIRA_USERNAME;
+    const apiToken = process.env.JIRA_API_TOKEN;
+
+    const givenUser = await getUserInformation('akadari@mannelabs.com');
+
+    const bodyData = `{
+        "fields": {
+          "assignee": {
+            "id": "712020:b935c98a-ceae-43ba-8aae-2f2620d71a19"
+          },
+          "description": {
+            "content": [
+              {
+                "content": [
+                  {
+                    "text": "Hello Testing",
+                    "type": "text"
+                  }
+                ],
+                "type": "paragraph"
+              }
+            ],
+            "type": "doc",
+            "version": 1
+          },
+          "priority": {
+                "id": "1"
+            },
+          "issuetype": {
+            "name": "Task"
+          },
+         
+          "project": {
+            "id": "10012"
+          },
+          "duedate": "2024-08-23",
+          "timetracking": {
+            "originalEstimate": "10"
+          },
+          "summary": "VERY NEW ISSUE time"
+         
+        },
+        "update": {}
+    }`;
+
+    fetch('https://mannelabs.atlassian.net/rest/api/3/issue', {
+    method: 'POST',
+    headers: {
+        'Authorization': `Basic ${Buffer.from(`${email}:${apiToken}`).toString('base64')}`,
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+    },
+    body: bodyData
+    })
+    .then(response => {
+        console.log(
+        `Response: ${response.status} ${response.statusText}`
+        );
+        return response.text();
+    })
+    .then(text => console.log(text))
+    .catch(err => console.error(err));
+}
+
+const getScreens = async ()=>{
+    const email = process.env.JIRA_USERNAME;
+    const apiToken = process.env.JIRA_API_TOKEN;
+
+
+    //for getting all screens in jira
+    // fetch('https://mannelabs.atlassian.net/rest/api/3/screens', {
+    //     method: 'GET',
+    //     headers: {
+    //       'Authorization': `Basic ${Buffer.from(`${email}:${apiToken}`).toString('base64')}`,
+    //       'Accept': 'application/json'
+    //     }
+    //   })
+    //     .then(response => {
+    //       console.log(
+    //         `Response: ${response.status} ${response.statusText}`
+    //       );
+    //       return response.text();
+    //     })
+    //     .then(text => console.log(text))
+    //     .catch(err => console.error(err));
+
+    // filter the screens values with the required project key in starting
+
+
+
+    // get all pending fields that can be assigned for a screen
+    // fetch(`https://mannelabs.atlassian.net/rest/api/3/screens/${10038}/availableFields`, {
+    // method: 'GET',
+    // headers: {
+    //     'Authorization': `Basic ${Buffer.from(`${email}:${apiToken}`).toString('base64')}`,
+    //     'Accept': 'application/json'
+    // }
+    // })
+    // .then(response => {
+    //     console.log(
+    //     `Response: ${response.status} ${response.statusText}`
+    //     );
+    //     return response.text();
+    // })
+    // .then(text => console.log(text))
+    // .catch(err => console.error(err));
+
+
+    //get all screen tabs
+    //  fetch(`https://mannelabs.atlassian.net/rest/api/3/screens/tabs`, {
+    // method: 'GET',
+    // headers: {
+    //     'Authorization': `Basic ${Buffer.from(`${email}:${apiToken}`).toString('base64')}`,
+    //     'Accept': 'application/json'
+    // }
+    // })
+    // .then(response => {
+    //     console.log(
+    //     `Response: ${response.status} ${response.statusText}`
+    //     );
+    //     return response.text();
+    // })
+    // .then(text => console.log(text))
+    // .catch(err => console.error(err));
+
+
+    //add field to screen using that particular tabId
+    // const bodyData = `{
+    //     "fieldId": "versions"
+    //   }`;
+      
+    //   fetch(`https://mannelabs.atlassian.net/rest/api/3/screens/${10038}/tabs/${10041}/fields`, {
+    //     method: 'POST',
+    //     headers: {
+    //       'Authorization': `Basic ${Buffer.from(`${email}:${apiToken}`).toString('base64')}`,
+    //       'Accept': 'application/json',
+    //       'Content-Type': 'application/json'
+    //     },
+    //     body: bodyData
+    //   })
+    //     .then(response => {
+    //       console.log(
+    //         `Response: ${response.status} ${response.statusText}`
+    //       );
+    //       return response.text();
+    //     })
+    //     .then(text => console.log(text))
+    //     .catch(err => console.error(err));
+
+
+
+}
+ 
