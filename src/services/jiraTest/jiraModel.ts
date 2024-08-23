@@ -11,7 +11,7 @@ const domain = 'mannelabs';
 
 let myIssueTypes:any = ['Risk Accept','Risk Reset','Risk Delete','Risk Mitigate','Training Task','Compliance Task','Audit Task'];
 
-let myStatuses:any = ['Not Started','Approval','Pending','Completed','Overdue','Pending Evidence','Evidence Uploaded','Not Applicable','Terminated','Approved','Rejected','Open','In Review','Closed']; 
+let myStatuses:any = ['Not Started','Approval','Pending','Completed','Overdue','Pending Evidence','Evidence Uploaded','Not Applicable','Terminated','Approved','Rejected','In Review']; 
 
 let dynematrixWorkflows:any = [
     {
@@ -59,29 +59,30 @@ export const setupJira = async()=>{
 
         //STEP1 for cretaing issue types
 
-        myIssueTypes.map(async (name:any,index:any)=>{
+        for (const name of myIssueTypes) {
             const apiUrl = `https://${domain}.atlassian.net/rest/api/3/issuetype`;
 
             const bodyData = {
-                "description":`Description of the new issue type ${name}`,
+                "description": `Description of the new issue type ${name}`,
                 "name": `${name}`,
                 "type": "standard",
-                "hierarchyLevel":`${0}`
-              };
+                "hierarchyLevel": `${0}`
+            };
 
-              let result1 = await axios.post(apiUrl, bodyData, {
-                headers: {
-                  'Authorization': `Basic ${Buffer.from(`${email}:${apiToken}`).toString('base64')}`,
-                  'Accept': 'application/json',
-                  'Content-Type': 'application/json'
-                }
-              })
-              .then((response:any) => {
-                console.log(`ISSUE TYPE ${index+1} CREATED`)
-                console.log(response.data);
-              })
-              .catch(err => console.error(err));
-        })
+            try {
+                let result1 = await axios.post(apiUrl, bodyData, {
+                    headers: {
+                        'Authorization': `Basic ${Buffer.from(`${email}:${apiToken}`).toString('base64')}`,
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    }
+                });
+                console.log(`ISSUE TYPE CREATED: ${name}`);
+                console.log(result1.data);
+            } catch (err) {
+                console.error(err);
+            }
+        }
 
 
 
@@ -92,17 +93,11 @@ export const setupJira = async()=>{
 
         //prepare payload for bulk creation
 
-        let statusesArray:any = [];
-
-        myStatuses.map((status:any, index:any) => {
-            let a = {
-                "description": `${status} description`,
-                "name": `${status}`,
-                "statusCategory": "TODO"
-            }
-
-            statusesArray.push(a);
-        });
+        const statusesArray = myStatuses.map((status:any) => ({
+            "description": `${status} description`,
+            "name": `${status}`,
+            "statusCategory": "TODO"
+        }));
 
         const statusCreatePayload:any = {
             "scope": {
@@ -121,9 +116,7 @@ export const setupJira = async()=>{
                 }
             });
             
-            // console.log(`Response: ${response.status} ${response.statusText}`);
             console.log('ALL STATUSES CREATED')
-            // console.log(response.data);
         
         } catch (err) {
             console.error(err);
@@ -147,48 +140,42 @@ export const setupJira = async()=>{
 
         // console.log('existingStatuses',existingStatuses)
 
-        dynematrixWorkflows.map(async (workObj:any,index:any)=>{
+        for (const workObj of dynematrixWorkflows) {
+            let statusIdsArray = [];
+            let presentStatusesArr = [];
 
-            let presentStatusesArr:any = [];
-            let statusIdsArray:any = [];
+            // Filter statuses for this particular workflow
+            for (const statusName of workObj.requiredStatuses) {
+                const findObj = existingStatuses.find((obj:any) => obj.name === statusName);
+                if (findObj) {
+                    statusIdsArray.push({ id: findObj.id });
+                    presentStatusesArr.push({ id: findObj.id, name: findObj.name });
+                }
+            }
 
-            //getting filtered statuses objects for this particular workflow
-
-            workObj.requiredStatuses.map((statusName:any)=>{
-                let findObj = existingStatuses.find((obj:any)=>{return obj.name == statusName});
-                let a = {id:findObj.id};
-                let b = {id:findObj.id,name:findObj.name};
-                statusIdsArray.push(a)
-                presentStatusesArr.push(b)
-            })
-
-            let myTransitions = createAllToAllTransitions(presentStatusesArr)
+            const myTransitions = createAllToAllTransitions(presentStatusesArr);
 
             const workflowPayload = {
-                "description": `Description for the worflow ${workObj.name}`,
+                "description": `Description for the workflow ${workObj.name}`,
                 "name": `${workObj.name}`,
                 "statuses": statusIdsArray,
                 "transitions": myTransitions
             };
 
-            // console.log(`HIIIIIIIIIIIIII${index + 1}`,workflowPayload)
-
-            let result = await axios.post(`https://${domain}.atlassian.net/rest/api/3/workflow`, workflowPayload, {
-                headers: {
-                    'Authorization': `Basic ${Buffer.from(`${email}:${apiToken}`).toString('base64')}`,
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json'
-                }
-            })
-            .then(response => {
-                // console.log(`Response: ${response.status} ${response.statusText}`);
-                console.log(`WORKFLOW ${index+1} Created`)
-                return response.data;
-            })
-            .then(data => console.log(data))
-            .catch(err => console.error(err));
-
-        })
+            try {
+                const result = await axios.post(`https://${domain}.atlassian.net/rest/api/3/workflow`, workflowPayload, {
+                    headers: {
+                        'Authorization': `Basic ${Buffer.from(`${email}:${apiToken}`).toString('base64')}`,
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    }
+                });
+                console.log(`WORKFLOW CREATED: ${workObj.name}`);
+                console.log(result.data);
+            } catch (err) {
+                console.error(err);
+            }
+        }
 
 
 
@@ -211,7 +198,7 @@ export const setupJira = async()=>{
         
         //Prepare Payload for the create workflow scheme call;
 
-        let dynematricWorkflowSchemePayload:any = {
+        let dynematrixWorkflowSchemePayload:any = {
             "defaultWorkflow": "jira",
             "description": "The description of the example NODE SAMPLE WORKFLOW scheme.",
             "name": "DYNEMATRIX SAMPLE WORKFLOW SCHEME 1",
@@ -221,12 +208,12 @@ export const setupJira = async()=>{
         for(let array of Object.entries(dynematricWorkflowScheme.issueTypeMappings)){
             let issueTypeObj:any = globalIssueTypes.find((obj:any)=>{return obj.name == array[0]});
             if(issueTypeObj != undefined){
-                dynematricWorkflowSchemePayload.issueTypeMappings[`${issueTypeObj.id}`] = array[1]
+                dynematrixWorkflowSchemePayload.issueTypeMappings[`${issueTypeObj.id}`] = array[1]
             }
         }
 
         // create worklow scheme api
-        const dynematrixWorkflowScheme = await axios.post(`https://${domain}.atlassian.net/rest/api/3/workflowscheme`, dynematricWorkflowSchemePayload, {
+        const dynematrixWorkflowScheme = await axios.post(`https://${domain}.atlassian.net/rest/api/3/workflowscheme`, dynematrixWorkflowSchemePayload, {
             headers: {
                 'Authorization': `Basic ${Buffer.from(`${email}:${apiToken}`).toString('base64')}`,
                 'Accept': 'application/json',
@@ -303,28 +290,27 @@ export const setupJira = async()=>{
 
         let presentSchemeId:any = myProjectIssueScheme[0].issueTypeScheme.id;
 
-        let myIssueTypeIds:any = [];
+        const myIssueTypeIds = myIssueTypes.map((name:any) => {
+            const findObject = globalIssueTypes.find((obj:any) => obj.name === name);
+            return findObject ? findObject.id : null;
+        }).filter((id:any) => id !== null);
 
-        myIssueTypes.map((name:any)=>{
-            let findObject = globalIssueTypes.find((obj:any)=>{return obj.name == name});
-            if(findObject != undefined){
-                myIssueTypeIds.push(findObject.id)
-            }
-        })
-
-        const issueTypesPayload = {
+        const issueTypesPayload:any = {
             "issueTypeIds":myIssueTypeIds
         }
 
-        const addIssueTypesToScheme:any = await axios.put(`https://${domain}.atlassian.net/rest/api/3/issuetypescheme/${presentSchemeId}/issuetype`, issueTypesPayload, {
-            headers: {
-                'Authorization': `Basic ${Buffer.from(`${email}:${apiToken}`).toString('base64')}`,
-                'Accept': 'application/json',
-                'Content-Type': 'application/json'
-            }
-        }).then(response=>{
-            console.log('ADDED IDS for scheme',response.data)
-        }).catch(err=> console.log(err))
+        try {
+            const addIssueTypesToScheme = await axios.put(`https://${domain}.atlassian.net/rest/api/3/issuetypescheme/${presentSchemeId}/issuetype`, issueTypesPayload, {
+                headers: {
+                    'Authorization': `Basic ${Buffer.from(`${email}:${apiToken}`).toString('base64')}`,
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                }
+            });
+            console.log('ADDED IDS for scheme', addIssueTypesToScheme);
+        } catch (err) {
+            console.error(err);
+        }
 
 
 
